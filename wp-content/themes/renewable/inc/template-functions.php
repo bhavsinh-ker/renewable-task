@@ -2,7 +2,7 @@
 /**
  * Functions which enhance the theme by hooking into WordPress
  *
- * @package catalog_site
+ * @package renewable
  */
 
 /**
@@ -62,3 +62,26 @@ function get_page_url_by_template( $template_path ) {
     }
     return get_the_permalink( $post_id );
 }
+
+function renewable_theme_setup() {
+    global $wpdb;
+    $table_name = $wpdb->base_prefix.'books';
+    $query = $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table_name ) );
+
+    if ( ! $wpdb->get_var( $query ) == $table_name ) {
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        name tinytext NOT NULL,
+        description text NULL,
+        price mediumint(9) NULL,
+        create_date datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+        PRIMARY KEY (id)
+        ) $charset_collate;";
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        dbDelta( $sql );
+    }
+}
+
+add_action( 'after_setup_theme', 'renewable_theme_setup' );
