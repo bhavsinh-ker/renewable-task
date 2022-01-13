@@ -63,7 +63,11 @@ function get_page_url_by_template( $template_path ) {
     return get_the_permalink( $post_id );
 }
 
+/**
+ * theme setup process
+ */
 function renewable_theme_setup() {
+    /* Create database table if not exist */
     global $wpdb;
     $table_name = $wpdb->base_prefix.'books';
     $query = $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table_name ) );
@@ -82,6 +86,27 @@ function renewable_theme_setup() {
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
         dbDelta( $sql );
     }
+    /* EOF Create database table if not exist */
 }
 
 add_action( 'after_setup_theme', 'renewable_theme_setup' );
+
+/**
+ * Add books admin menu
+ */
+function renewable_books_admin_menu() {
+	add_menu_page( 'Books', 'Books', 'manage_options', 'renewable-books', 'renewable_books_admin_menu_callback', 'dashicons-book', 6  );
+}
+
+add_action( 'admin_menu', 'renewable_books_admin_menu' );
+
+/**
+ * Books admin menu callback
+ */
+function renewable_books_admin_menu_callback() {
+    ?>
+    <div class="wrap">
+        <h1 class="wp-heading-inline"><?php _e('Books', 'renewable'); ?></h1>
+    </div>
+    <?php
+}
