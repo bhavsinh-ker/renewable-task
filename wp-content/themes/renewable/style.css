@@ -1,0 +1,155 @@
+/*!
+Theme Name: Renewable
+Theme URI: http://underscores.me/
+Author: Bhavik Ker
+Author URI: https://github.com/bhavsinh-ker
+Description: Build a new WordPress theme from scratch
+Version: 1.0.0
+Tested up to: 5.4
+Requires PHP: 5.6
+License: GNU General Public License v2 or later
+License URI: LICENSE
+Text Domain: catalog_site
+Tags: custom-background, custom-logo, custom-menu, featured-images, threaded-comments, translation-ready
+
+This theme, like WordPress, is licensed under the GPL.
+Use it to make something cool, have fun, and share what you've learned.
+
+Renewable is based on Underscores https://underscores.me/, (C) 2012-2020 Automattic, Inc.
+Underscores is distributed under the terms of the GNU GPL v2 or later.
+
+Normalizing styles have been helped along thanks to the fine work of
+Nicolas Gallagher and Jonathan Neal https://necolas.github.io/normalize.css/
+*/
+/*--------------------------------------------------------------
+# Generic
+--------------------------------------------------------------*/
+/*--------------------------------------------------------------
+# Base
+--------------------------------------------------------------*/
+/* Typography
+--------------------------------------------- */
+*, *:focus {
+	outline: none;
+}
+
+/* Elements
+--------------------------------------------- */
+body {
+	font-size: 14px;
+	margin: 0;
+	padding: 0;
+	color: #000;
+}
+
+/* Make sure embeds and iframes fit their containers. */
+embed,
+iframe,
+object {
+	max-width: 100%;
+}
+
+img {
+	height: auto;
+	max-width: 100%;
+}
+
+figure {
+	margin: 1em 0;
+}
+
+/* Links
+--------------------------------------------- */
+a {
+	text-decoration: none;
+	-webkit-transition: all 0.4s ease;
+	-moz-transition: all 0.4s ease;
+	-o-transition: all 0.4s ease;
+	-ms-transition: all 0.4s ease;
+	transition: all 0.4s ease;
+}
+
+a:focus, a:hover {
+	outline: none;
+}
+
+.renewable-mobile-menu {
+	width: 80%;
+	max-width: 290px;
+	position: fixed;
+	top: 0px;
+	right: -100%;
+	height: 100%;
+	z-index: 99999;
+	-webkit-transition: all 0.4s ease;
+	-moz-transition: all 0.4s ease;
+	-o-transition: all 0.4s ease;
+	-ms-transition: all 0.4s ease;
+	transition: all 0.4s ease;
+}
+
+.renewable-mobile-menu.active {
+	right: 0;
+}
+
+.renewable-mobile-menu .menu-mobile-menu-container ul li a,
+.renewable-mobile-menu .renewable-mobile-menu-close {
+	padding: 10px 20px;
+	display: block;
+	text-decoration: none;
+	color: #000;
+	text-transform: capitalize;
+	font-size: 18px;
+	border-top: 1px solid #CCC;
+}
+
+.renewable-mobile-menu .renewable-mobile-menu-close {
+	border-top: 0;
+}
+
+.renewable-mobile-menu .menu-mobile-menu-container ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.renewable-mobile-menu .menu-mobile-menu-container ul li ul {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	z-index: 5;
+	background-color: #f8f9fa;
+	top: 0;
+	right: -100%;
+	-webkit-transition: all 0.4s ease;
+	-moz-transition: all 0.4s ease;
+	-o-transition: all 0.4s ease;
+	-ms-transition: all 0.4s ease;
+	transition: all 0.4s ease;
+}
+
+.renewable-mobile-menu .menu-mobile-menu-container ul li ul.active {
+	right: 0;
+}
+
+.renewable-mobile-menu .menu-mobile-menu-container ul li:last-child > a {
+	border-bottom: 1px solid #CCC;
+}
+
+/*-----------------From small Mobile View to Tablet View (bootstrap .col to .col-lg)-----------------*/
+/*-----------------From small Mobile View to Tablet View (bootstrap .col to .col-md)-----------------*/
+/*-----------------From Small Mobile View to large mobile view (bootstrap .col to .col-sm)-----------------*/
+/*-----------------Small Mobile View (bootstrap .col)-----------------*/
+/*--------------------------------------------------------------
+# Layouts
+--------------------------------------------------------------*/
+/*--------------------------------------------------------------
+# Components
+--------------------------------------------------------------*/
+/*--------------------------------------------------------------
+# Utilities
+--------------------------------------------------------------*/
+/* Alignments
+--------------------------------------------- */
+
+/*# sourceMappingURL=style.css.map */

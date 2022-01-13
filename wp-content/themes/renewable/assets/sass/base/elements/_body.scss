@@ -1,0 +1,5 @@
+body {
+    @include txt_reg;
+    @include no_mar_pad;
+    color: $black;
+}
