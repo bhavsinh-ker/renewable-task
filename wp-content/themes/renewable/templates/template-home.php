@@ -21,6 +21,9 @@ get_header();
 				<div class="row">
 					<div class="col-md-8 mx-auto">
 						<?php 
+							if( isset( $_GET['q'] ) && $_GET['q'] !== "" ) {
+								echo '<h3>Query String is: '.esc_html($_GET['q']).'</h3>';
+							}
 							get_template_part( 'template-parts/content', 'page' );
 							
 							// If comments are open or we have at least one comment, load up the comment template.
