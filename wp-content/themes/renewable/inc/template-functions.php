@@ -319,11 +319,12 @@ function renewable_admin_init() {
         session_start();
     }
 
+    global $wpdb;
+    $table_name = $wpdb->base_prefix.'books';
+    $url = get_admin_url( null, 'admin.php?page=renewable-books');
+    
     /* Form actions */
-    if( isset( $_POST['action'] ) && ( 'add-new' == $_POST['action'] || 'edit' == $_POST['action'] ) ) {
-        global $wpdb;
-        $table_name = $wpdb->base_prefix.'books';
-        $url = get_admin_url( null, 'admin.php?page=renewable-books');
+    if( isset( $_POST['action'] ) && ( 'add-new' == $_POST['action'] || 'edit' == $_POST['action'] || 'delete' == $_POST['action'] ) ) {
         $error_url = ( isset( $_POST['_wp_http_referer'] ) && '' != $_POST['_wp_http_referer'] ) ? $_POST['_wp_http_referer'] : $url;
 
         $fields = array( 
@@ -400,8 +401,60 @@ function renewable_admin_init() {
             header( "Location: ".$url );
             die();
         }
+
+        if( 'delete' == $_POST['action'] && ( isset( $_POST['book'] ) && ! empty( $_POST['book'] ) ) ) {
+            $ids = implode( ',', $_POST['book'] );
+            $books_delete = $wpdb->query( "DELETE FROM $table_name WHERE id IN($ids)" );
+
+            if( false === $books_delete ) {
+                $_SESSION['renewable']['message'][] = array(
+                    "status" => 0,
+                    "message" => __( 'Something is Wrong! Please Try Again.', 'renewable' )
+                );
+                header( "Location: ".$error_url );
+                die();
+            }
+    
+            $_SESSION['renewable']['message'][] = array(
+                "status" => 1,
+                "message" => __( 'Books Deleted Successfuly', 'renewable' )
+            );
+            header( "Location: ".$url );
+            die();
+        }
+
     }
     /* EOF Form actions */
+
+    /* Book Delete Action */
+    if( isset( $_GET['action'] ) && 'delete' == $_GET['action'] && isset( $_GET['book'] ) && '' != $_GET['book'] ) {
+        $book_delete = $wpdb->delete(
+            $table_name,
+            array(
+                'id' => esc_attr ( $_GET['book'] ) 
+            ),
+            array(
+                '%d'
+            ),
+        );
+
+        if( false === $book_delete ) {
+            $_SESSION['renewable']['message'][] = array(
+                "status" => 0,
+                "message" => __( 'Something is Wrong! Please Try Again.', 'renewable' )
+            );
+            header( "Location: ".$url );
+            die();
+        }
+
+        $_SESSION['renewable']['message'][] = array(
+            "status" => 1,
+            "message" => __( 'Book Deleted Successfuly', 'renewable' )
+        );
+        header( "Location: ".$url );
+        die();
+    }
+    /* EOF Book Delete Action */
 
     /* Show form messages */
     if( isset( $_SESSION['renewable']['message'] ) && !empty( $_SESSION['renewable']['message'] ) ) {        
