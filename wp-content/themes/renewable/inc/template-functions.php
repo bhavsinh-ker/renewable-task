@@ -80,7 +80,7 @@ function renewable_theme_setup() {
         name tinytext NOT NULL,
         description text NULL,
         price mediumint(9) NULL,
-        create_date datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+        create_date datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
         PRIMARY KEY (id)
         ) $charset_collate;";
         require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
@@ -105,17 +105,48 @@ add_action( 'admin_menu', 'renewable_books_admin_menu' );
  */
 function renewable_books_admin_menu_callback() {
     $page_name = ( isset( $_GET['page'] ) && esc_attr( $_GET['page'] )  != "" ) ? $_GET['page'] : 'renewable-books';
-    $books_list = new Renewable_Books_List();
-    $books_list->prepare_items();
+    $page_title = __('Books', 'renewable');
+    if ( isset ( $_GET['action'] ) ) {
+        switch ( esc_attr ($_GET['action'] ) ) {
+            case "add-new":
+                $page_title = __('Add New Book', 'renewable');
+            break;
+            case "edit":
+                $page_title = __('Edit Book', 'renewable');
+            break;
+        }
+    }
     ?>
     <div class="wrap">
-        <h1 class="wp-heading-inline"><?php _e('Books', 'renewable'); ?></h1>
+        <h1 class="wp-heading-inline"><?php echo $page_title; ?></h1>
+        <?php if ( ! isset( $_GET['action'] ) ) { ?>
         <a href="?page=<?php echo $page_name; ?>&action=add-new" class="page-title-action"><?php _e('Add New', 'renewable'); ?></a>
+        <?php } ?>
         <hr class="wp-header-end">
+        <?php echo settings_errors(); ?>
         <form method="post">
             <input type="hidden" name="page" value="<?php echo $page_name; ?>">
-            <?php
-                $books_list->display();
+            <?php 
+                if ( isset ( $_GET['action'] ) && '' != esc_attr ( $_GET['action'] ) ) {
+                    // add & edit form
+                    $form_data = array();
+                    echo '<input type="hidden" name="action" value="'.esc_attr ($_GET['action'] ).'">';
+                    if( 'edit' == esc_attr ($_GET['action'] ) && isset ( $_GET['book'] ) && '' != esc_attr ($_GET['book'] ) ) {
+                        echo '<input type="hidden" name="id" value="'.esc_attr ($_GET['book'] ).'">';
+                        global $wpdb;
+                        $table_name = $wpdb->base_prefix.'books';
+                        $form_data = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", esc_attr ($_GET['book'] ) ), ARRAY_A );
+                    }
+                    echo wp_nonce_field( -1, '_wpnonce' );
+                    if( $_GET['action'] == "add-new" || $_GET['action'] == "edit" ) {
+                        echo get_renewable_books_form_html($form_data);
+                    }
+                } else {
+                    // view book table
+                    $books_list = new Renewable_Books_List();
+                    $books_list->prepare_items();
+                    $books_list->display();
+                }
             ?>
         </form>
     </div>    
@@ -241,3 +272,151 @@ class Renewable_Books_List extends WP_List_Table {
         $this->items = $books_data;
     }
 }
+
+function get_renewable_books_form_html( $form_data = NULL ) {
+    ?>
+    <table class="form-table">
+        <tbody>
+            <tr>
+                <th scope="row">
+                    <label for="bookName"><?php _e( 'Book Name', 'renewable' ); ?></label>
+                </th>
+                <td>
+                    <input name="name" type="text" id="bookName" class="regular-text" value="<?php echo ( isset( $form_data['name'] ) && '' != $form_data['name'] ) ? esc_attr($form_data['name']) : ''; ?>" required>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="bookPrice"><?php _e( 'Price', 'renewable' ); ?></label>
+                </th>
+                <td>
+                    <input name="price" type="number" id="bookPrice" class="regular-text" value="<?php echo ( isset( $form_data['price'] ) && '' != $form_data['price'] ) ? esc_attr($form_data['price']) : ''; ?>">
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="bookDescription"><?php _e( 'Description', 'renewable' ); ?></label>
+                </th>
+                <td>
+                    <textarea name="description" id="description" cols="30" rows="10" id="bookDescription" class="regular-text"><?php echo ( isset( $form_data['description'] ) && '' != $form_data['description'] ) ? esc_attr($form_data['description']) : ''; ?></textarea>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <p class="submit">
+        <input type="submit" name="submit" id="BookFormSubmit" class="button button-primary" value="<?php _e( 'Save Book', 'renewable' ); ?>">
+    </p>
+    <?php
+}
+
+function renewable_admin_init() {
+
+    if( ! isset( $_GET['page'] ) || 'renewable-books' != $_GET['page'] ) {
+        return;
+    }
+
+    if ( ! session_id() ) {
+        session_start();
+    }
+
+    /* Form actions */
+    if( isset( $_POST['action'] ) && ( 'add-new' == $_POST['action'] || 'edit' == $_POST['action'] ) ) {
+        global $wpdb;
+        $table_name = $wpdb->base_prefix.'books';
+        $url = get_admin_url( null, 'admin.php?page=renewable-books');
+        $error_url = ( isset( $_POST['_wp_http_referer'] ) && '' != $_POST['_wp_http_referer'] ) ? $_POST['_wp_http_referer'] : $url;
+
+        $fields = array( 
+            'name' => esc_attr($_POST['name']), 
+            'price' => esc_attr($_POST['price']), 
+            'description' => esc_attr($_POST['description'])
+        );
+
+        $fields_type = array( 
+            '%s', 
+            '%d',
+            '%s'
+        );
+
+        if( 'add-new' == $_POST['action'] ) {
+            $insert_book = $wpdb->insert( 
+                $table_name, 
+                $fields, 
+                $fields_type
+            );
+
+            if( false === $insert_book ) {
+                $_SESSION['renewable']['message'][] = array(
+                    "status" => 0,
+                    "message" => __( 'Something is Wrong! Please Try Again.', 'renewable' )
+                );
+                header( "Location: ".$error_url );
+                die();
+            }
+
+            $url = add_query_arg( array(
+                'action' => 'edit',
+                'book' => $wpdb->insert_id
+            ), $url );
+
+            $_SESSION['renewable']['message'][] = array(
+                "status" => 1,
+                "message" => __( 'Book Added Successfuly.', 'renewable' )
+            );
+            header( "Location: ".$url );
+            die();
+        }
+
+        if( 'edit' == $_POST['action'] && ( isset( $_POST['id'] ) && '' != $_POST['id'] ) ) {
+            $update_book = $wpdb->update(
+                $table_name,
+                $fields, 
+                array( 
+                    'id' => esc_attr ( $_POST['id'] ) 
+                ), 
+                $fields_type, 
+                array( '%d' )
+            );
+
+            if( false === $update_book ) {
+                $_SESSION['renewable']['message'][] = array(
+                    "status" => 0,
+                    "message" => __( 'Something is Wrong! Please Try Again.', 'renewable' )
+                );
+                header( "Location: ".$error_url );
+                die();
+            }
+
+            $url = add_query_arg( array(
+                'action' => 'edit',
+                'book' => esc_attr ( $_POST['id'] )
+            ), $url );
+
+            $_SESSION['renewable']['message'][] = array(
+                "status" => 1,
+                "message" => __( 'Book Updated Successfuly.', 'renewable' )
+            );
+
+            header( "Location: ".$url );
+            die();
+        }
+    }
+    /* EOF Form actions */
+
+    /* Show form messages */
+    if( isset( $_SESSION['renewable']['message'] ) && !empty( $_SESSION['renewable']['message'] ) ) {        
+        add_action( 'admin_notices', function() {
+            foreach( $_SESSION['renewable']['message'] as $data ) {
+            ?>
+            <div class="notice notice-<?php echo ( isset( $data['status'] ) && 1 === $data['status'] ) ? 'success' : 'error'; ?> is-dismissible">
+                <p><?php echo ( isset( $data['message'] ) && $data['message'] != '' ) ? $data['message'] : _e( 'Done!', 'renewable' ); ?></p>
+            </div>
+            <?php
+            }
+            unset( $_SESSION['renewable']['message'] );
+        });
+    }
+    /* EOF Show form messages */
+}
+
+add_action('admin_init', 'renewable_admin_init');
