@@ -273,6 +273,9 @@ class Renewable_Books_List extends WP_List_Table {
     }
 }
 
+/**
+ * Books form html
+ */
 function get_renewable_books_form_html( $form_data = NULL ) {
     ?>
     <table class="form-table">
@@ -309,6 +312,10 @@ function get_renewable_books_form_html( $form_data = NULL ) {
     <?php
 }
 
+
+/**
+ * renewable admin intit actions and process
+ */
 function renewable_admin_init() {
 
     if( ! isset( $_GET['page'] ) || 'renewable-books' != $_GET['page'] ) {
