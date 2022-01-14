@@ -480,3 +480,92 @@ function renewable_admin_init() {
 }
 
 add_action('admin_init', 'renewable_admin_init');
+
+/**
+ * Books list shortcode callback
+ */
+function renewable_books_list_shortcode_callback( $atts ) {
+    $atts = shortcode_atts( array(
+        'limit' => 9,
+        'order_by' => 'id',
+        'order' => 'DESC'
+    ), $atts, 'renewable_books_list' );
+    
+    global $wpdb;
+    $orderby = $atts['order_by'];
+    $order = $atts['order'];
+    $orderby = $atts['order_by'];
+    $per_page = $atts['limit'];
+    $current_page = ( isset( $_GET['books_list_page'] ) && '' != $_GET['books_list_page'] ) ? $_GET['books_list_page'] : 1;
+    $offset = ($current_page-1 ) * $per_page;
+    $books_data = $wpdb->get_results( 
+        $wpdb->prepare("SELECT * FROM {$wpdb->prefix}books ORDER BY $orderby $order LIMIT %d OFFSET %d", $per_page, $offset),
+        ARRAY_A
+    );
+    ob_start();
+    ?>
+    <div class="row">
+        <?php 
+            if( !empty($books_data) ) { 
+                foreach( $books_data as $book ) {
+            ?>
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-capitalize"><?php echo esc_attr( $book['name'] ); ?></h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Price: <?php echo esc_attr( $book['price'] ); ?></h6>
+                    <?php if( '' != $book['description'] ) { ?>
+                    <p class="card-text"><?php echo apply_filters( 'the_excerpt', $book['description'] ); ?></p>
+                    <?php } ?>
+                </div>
+            </div>
+        </div>
+        <?php 
+                }
+                $big = 999999999;
+                $total_items = $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}books" );
+                $total_pages = $total_items / $per_page;
+                if( is_float( $total_pages ) ) {
+                    $total_pages = (int) $total_pages + 1;
+                }
+                if( $total_pages > 1 ) {
+                    $paginate_links = paginate_links( array(
+                        'format' => '?books_list_page=%#%',
+                        'current' => $current_page,
+                        'total' => $total_pages,
+                        'next_text' => '<span class="page-link">&raquo;</span>',
+                        'prev_text' => '<span class="page-link">&laquo;</span>',
+                        'before_page_number' => '<span class="page-link">',
+                        'after_page_number' => '</span>',
+                        'type' => 'array'
+                    ) );
+                    if( isset ( $paginate_links ) && ! empty ($paginate_links) ) {
+                    ?>
+        <div class="col-md-12">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mb-0">
+                    <?php foreach ($paginate_links as $paginate_link) { ?>
+                    <li class="page-item">
+                        <?php echo $paginate_link; ?>
+                    </li>
+                    <?php } ?>
+                </ul>
+            </nav>
+        </div>
+                    <?php 
+                    }
+                }
+            } else { 
+        ?>
+        <div class="col-md-12 mb-3">
+            <div class="alert alert-info">
+                <?php _e( 'Books Not Found!', 'renewable' );?>
+            </div>
+        </div>
+        <?php } ?>
+    </div>
+    <?php
+    return ob_get_clean();
+}
+
+add_shortcode( 'renewable_books_list', 'renewable_books_list_shortcode_callback' );
